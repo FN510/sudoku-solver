@@ -8,6 +8,25 @@ class SudokuSolver {
       return { error: 'Expected puzzle to be 81 characters long' }
     } else if (!regex.test(puzzleString)) {
       return { error: 'Invalid characters in puzzle'}
+    } else { // check for invalid initial placement
+      let arr = this.createArray(puzzleString);
+      for (let i=0; i<arr.length; i++) {
+        for (let j=0; j<arr.length; j++) {
+          if (arr[i][j]!='.') {
+            let row = this.indexToCoordinate(i,j)[0]
+            let col = this.indexToCoordinate(i,j)[1]
+            let rowCheck = this.checkRowPlacement(puzzleString, row, col, arr[i][j]);
+            let colCheck = this.checkColPlacement(puzzleString, row, col, arr[i][j]);
+            let regionCheck = this.checkRegionPlacement(puzzleString, row, col, arr[i][j]);
+            if (!(rowCheck && colCheck && regionCheck)) {
+              return { error: 'Puzzle cannot be solved' };
+            }
+          }
+          
+        }
+      }
+      
+
     }
     return true;
     
@@ -179,8 +198,10 @@ class SudokuSolver {
 
   }
 
+  // depth first brute force
   solve(puzzleString) {
     let arr = this.createArray(puzzleString);
+    // check for invalid puzzle
     let backtrack = false;
     let num = 1;
     // fill in row by row
@@ -209,7 +230,8 @@ class SudokuSolver {
             }
 
             if (arr[i][j]=='.' ) {
-              num =1;
+              let oneToNine = [1,2,3,4,5,6,7,8,9].map(e=>e.toString())
+              num = parseInt(oneToNine.filter(e=>arr[i].indexOf(e)<0)[0])
             }
           
          
@@ -260,7 +282,10 @@ class SudokuSolver {
               backtrack = true;
               if (j==0) {
                 i--;
-                j=8
+                j=8;
+                if (i==0) {
+                  return { error: 'Puzzle cannot be solved' }
+                }
               } else {
                 j--;
               }
@@ -284,13 +309,54 @@ class SudokuSolver {
     if (puzzleString.indexOf('.')>=0) {
       return { error: 'Puzzle cannot be solved' }
     } else {
-      return this.arrayToPuzzleString(arr);
+      return {solution: this.arrayToPuzzleString(arr)};
     } 
 
     // convert array to string
     
     
   }
+
+
+  solve2(puzzleString) {
+    let arr = this.createArray(puzzleString);
+    const oneToNine = [1,2,3,4,5,6,7,8,9].map(e=>e.toString());
+
+    while (puzzleString.indexOf('.')>=0) {
+      for (let i=0; i<arr.length; i++) {
+        for (let j=0; j<arr.length; j++) {
+          let possibleNums = [];
+          let coord = this.indexToCoordinate(i,j)
+          if (arr[i][j]=='.') {
+            oneToNine.forEach((e)=> {
+              let rowCheck = this.checkRowPlacement(puzzleString, coord[0], coord[1], e);
+              let colCheck = this.checkColPlacement(puzzleString, coord[0], coord[1], e);
+              let regionCheck = this.checkRegionPlacement(puzzleString, coord[0], coord[1], e);
+
+              if (regionCheck && colCheck && rowCheck) {
+                possibleNums.push(e);
+              }
+            });
+            if (possibleNums.length==1) {
+              arr[i][j]=possibleNums[0];
+              puzzleString = this.arrayToPuzzleString(arr);
+            }
+          }
+        }
+      }
+    }
+   
+    if (puzzleString.indexOf('.')>=0) {
+      return { error: 'Puzzle cannot be solved' }
+    } else {
+      return {solution: this.arrayToPuzzleString(arr)};
+    } 
+
+    // convert array to string
+    
+    
+  }
+
   arrayToPuzzleString(arr) {
     let solution = '';
     for (let row = 0; row<arr.length; row++) {
