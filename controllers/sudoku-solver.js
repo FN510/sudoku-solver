@@ -199,7 +199,7 @@ class SudokuSolver {
   }
 
   // depth first brute force
-  solve(puzzleString) {
+  solveDFS(puzzleString) {
     let arr = this.createArray(puzzleString);
     // check for invalid puzzle
     let backtrack = false;
@@ -318,7 +318,7 @@ class SudokuSolver {
   }
 
 
-  solve2(puzzleString) {
+  solve(puzzleString) {
     let arr = this.createArray(puzzleString);
     const oneToNine = [1,2,3,4,5,6,7,8,9].map(e=>e.toString());
 

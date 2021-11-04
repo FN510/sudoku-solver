@@ -58,7 +58,7 @@ module.exports = function (app) {
         if (validation && validation.error) {
           res.send(validation);
         } else {
-          let answer = solver.solve2(req.body.puzzle)
+          let answer = solver.solve(req.body.puzzle)
           console.log(answer);
           res.send(answer);
         }
