@@ -10,23 +10,7 @@ class SudokuSolver {
       return { error: 'Invalid characters in puzzle'}
     } else { // check for invalid initial placement
       let arr = this.createArray(puzzleString);
-      for (let i=0; i<arr.length; i++) {
-        for (let j=0; j<arr.length; j++) {
-          if (arr[i][j]!='.') {
-            let row = this.indexToCoordinate(i,j)[0]
-            let col = this.indexToCoordinate(i,j)[1]
-            let rowCheck = this.checkRowPlacement(puzzleString, row, col, arr[i][j]);
-            let colCheck = this.checkColPlacement(puzzleString, row, col, arr[i][j]);
-            let regionCheck = this.checkRegionPlacement(puzzleString, row, col, arr[i][j]);
-            if (!(rowCheck && colCheck && regionCheck)) {
-              return { error: 'Puzzle cannot be solved' };
-            }
-          }
-          
-        }
-      }
-      
-
+    
     }
     return true;
     
@@ -198,131 +182,34 @@ class SudokuSolver {
 
   }
 
-  // depth first brute force
-  solveDFS(puzzleString) {
-    let arr = this.createArray(puzzleString);
-    // check for invalid puzzle
-    let backtrack = false;
-    let num = 1;
-    // fill in row by row
-    for (let i=0; i<arr.length; i++) {
-      if (arr[i].indexOf('.')>=0) {
-        for (let j=0; j<arr.length; j++) {
-          console.log(i,j)
-          if (arr[i][j]=='.' || backtrack) {
-            while (backtrack) {
-              if (j==0) {
-                i--;
-                j=8
-              } else {
-                j--;
-              }
-              console.log('back', i, j, arr[i][j])
-              if (parseInt(arr[i][j])<9) {
-                num = parseInt(arr[i][j])+1;
-                console.log('back num', num);
-                break;
-              } else {
-                arr[i][j]='.'
-                console.log('remove', i, j)
-                puzzleString = this.arrayToPuzzleString(arr);
-              }
-            }
-
-            if (arr[i][j]=='.' ) {
-              let oneToNine = [1,2,3,4,5,6,7,8,9].map(e=>e.toString())
-              num = parseInt(oneToNine.filter(e=>arr[i].indexOf(e)<0)[0])
-            }
-          
-         
-            let coord = this.indexToCoordinate(i,j)
-            console.log(coord);
-            
-            let numString = num.toString();
-            //console.log(numString, typeof numString);
-            //console.log(arr[i])
-            while (arr[i].indexOf(numString)>=0 && num<9) {
-              console.log('num is', num)
-              num++;
-              numString = num.toString()
-            }
-            //console.log(num)
-            let rowCheck = this.checkRowPlacement(puzzleString, coord[0], coord[1], numString);
-            console.log(coord[0], coord[1], numString);
-            //console.log(rowCheck);
-            let colCheck = this.checkColPlacement(puzzleString, coord[0], coord[1], numString);
-            //console.log(colCheck);
-            let regionCheck = this.checkRegionPlacement(puzzleString, coord[0], coord[1], numString);
-            console.log(rowCheck, colCheck, regionCheck)
-            while ((rowCheck==false || colCheck==false || regionCheck==false) && num<9) {
-              console.log('inc num', num+1)
-              num++;
-              numString = num.toString();
-              rowCheck = this.checkRowPlacement(puzzleString, coord[0], coord[1], numString);
-              colCheck = this.checkColPlacement(puzzleString, coord[0], coord[1], numString);
-              regionCheck = this.checkRegionPlacement(puzzleString, coord[0], coord[1], numString);
-            }
-            console.log(rowCheck, colCheck, regionCheck)
-            if (rowCheck && colCheck && regionCheck) {
-              arr[i][j]=numString;
-              console.log('added', numString)
-              
-              puzzleString = this.arrayToPuzzleString(arr);
-              console.log(puzzleString)
-              backtrack = false
-            } else { // backtrack
-              console.log('error solving')
-              console.log(puzzleString)
-              if (arr[i][j]!='.') {
-                console.log('removing', i,j, arr[i][j])
-                arr[i][j]='.'
-                puzzleString = this.arrayToPuzzleString(arr);
-              }
-              
-              backtrack = true;
-              if (j==0) {
-                i--;
-                j=8;
-                if (i==0) {
-                  return { error: 'Puzzle cannot be solved' }
-                }
-              } else {
-                j--;
-              }
-            }
-            // if (rowCheck && colCheck && regionCheck) {
-            //   arr[i][j] = numString;
-            // } else {
-            //   num++;
-            //   numString = num.toString();
-            //   while (arr[i].indexOf(numString)>=0) {
-            //     num++;
-            //   }
-
-            // }
-          }
-        }
-      }
-      
-    }
-
-    if (puzzleString.indexOf('.')>=0) {
-      return { error: 'Puzzle cannot be solved' }
-    } else {
-      return {solution: this.arrayToPuzzleString(arr)};
-    } 
-
-    // convert array to string
-    
-    
-  }
-
 
   solve(puzzleString) {
+    let validation = this.validate(puzzleString);
+    if (validation && validation.error) {
+      return validation;
+    }
     let arr = this.createArray(puzzleString);
+
+    // check for invalid initial placement
+    for (let i=0; i<arr.length; i++) {
+      for (let j=0; j<arr.length; j++) {
+        if (arr[i][j]!='.') {
+          let row = this.indexToCoordinate(i,j)[0]
+          let col = this.indexToCoordinate(i,j)[1]
+          let rowCheck = this.checkRowPlacement(puzzleString, row, col, arr[i][j]);
+          let colCheck = this.checkColPlacement(puzzleString, row, col, arr[i][j]);
+          let regionCheck = this.checkRegionPlacement(puzzleString, row, col, arr[i][j]);
+          if (!(rowCheck && colCheck && regionCheck)) {
+            return { error: 'Puzzle cannot be solved' };
+          }
+        }
+        
+      }
+    }
     const oneToNine = [1,2,3,4,5,6,7,8,9].map(e=>e.toString());
 
     while (puzzleString.indexOf('.')>=0) {
+      let hasAns =false;
       for (let i=0; i<arr.length; i++) {
         for (let j=0; j<arr.length; j++) {
           let possibleNums = [];
@@ -339,10 +226,14 @@ class SudokuSolver {
             });
             if (possibleNums.length==1) {
               arr[i][j]=possibleNums[0];
+              hasAns = true;
               puzzleString = this.arrayToPuzzleString(arr);
             }
           }
         }
+      }
+      if (!hasAns) {
+        return { error: 'Puzzle cannot be solved' }
       }
     }
    
